@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AeroGuard · 官方测试题自动测试报告</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter','Segoe UI','Microsoft YaHei',sans-serif;background:#f6f7f9;color:#1a1d24;font-size:14px;line-height:1.55}
+header{display:flex;justify-content:space-between;align-items:center;padding:16px 28px;background:#fff;border-bottom:1px solid #e8eaee;position:sticky;top:0;z-index:50;flex-wrap:wrap;gap:12px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#2563eb,#1e40af);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+h1{font-size:18px;font-weight:700}
+.sub{font-size:12px;color:#6b7280}
+.ghost{padding:8px 14px;border:1px solid #dfe3ea;border-radius:10px;background:#fff;cursor:pointer;font-size:13px;text-decoration:none;color:#1a1d24}
+.ghost:hover{border-color:#2563eb;color:#2563eb}
+.sim-badge{background:#fef3c7;color:#92400e;font-size:10px;padding:2px 8px;border-radius:99px;font-weight:600}
+main{max-width:1240px;margin:24px auto;padding:0 20px;display:flex;flex-direction:column;gap:18px}
+.card{background:#fff;border-radius:16px;padding:20px 22px;box-shadow:0 1px 3px rgba(16,24,40,.06),0 4px 14px rgba(16,24,40,.04)}
+.card h2{font-size:15px;font-weight:700;margin-bottom:12px}
+.summary{display:flex;gap:14px;flex-wrap:wrap}
+.sum-box{flex:1;min-width:150px;border-radius:14px;padding:16px 18px;text-align:center}
+.sum-box b{font-size:30px;display:block}
+.s-pass{background:#ecfdf5;color:#047857}
+.s-fail{background:#fef2f2;color:#b91c1c}
+.s-total{background:#eef2ff;color:#1e40af}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:11px;color:#6b7280;font-weight:600;padding:8px 10px;border-bottom:1px solid #eef0f3}
+td{padding:9px 10px;border-bottom:1px solid #f3f4f6;vertical-align:top}
+.verdict{font-weight:700;padding:2px 10px;border-radius:99px;font-size:12px;white-space:nowrap}
+.v-pass{background:#ecfdf5;color:#047857}
+.v-fail{background:#fef2f2;color:#b91c1c}
+.actual{background:#f8fafc;border-radius:10px;padding:10px 12px;font-size:12.5px;white-space:pre-wrap;border-left:3px solid #2563eb;margin-top:4px}
+.forbid{font-size:11px;color:#b91c1c}
+.muted{color:#6b7280;font-size:12px}
+details{cursor:pointer}
+summary{font-size:12px;color:#2563eb}
+footer{text-align:center;color:#9ca3af;font-size:12px;padding:26px 20px 34px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">AG</div>
+    <div>
+      <h1>AeroGuard · 测试报告</h1>
+      <p class="sub">官方 15 道测试题（08_测试问题）· 自动执行 · <span class="sim-badge">模拟数据</span></p>
+    </div>
+  </div>
+  <div><a class="ghost" href="index.html">← 返回主界面</a></div>
+</header>
+<main>
+  <div class="card">
+    <h2>总览</h2>
+    <div class="summary">
+      <div class="sum-box s-total"><b id="sumTotal">-</b>测试总数</div>
+      <div class="sum-box s-pass"><b id="sumPass">-</b>通过</div>
+      <div class="sum-box s-fail"><b id="sumFail">-</b>未通过</div>
+    </div>
+    <p class="muted" style="margin-top:12px">判定逻辑：每题调用主界面同一套评分引擎/话术生成器，产出「实际行为」；再扫描实际行为是否触犯「禁止行为」、是否满足「预期行为」关键词。两者都过 = 通过。点击每行可展开检查细节。</p>
+  </div>
+  <div class="card">
+    <h2>逐题结果</h2>
+    <table id="testTable"></table>
+  </div>
+</main>
+<footer>AeroGuard 原型 · 测试引擎与主界面共用同一评分/话术逻辑 · 所有数据均为赛事模拟</footer>
+<script src="data.js"></script>
+<script src="engine.js"></script>
+<script src="tests.js"></script>
+</body>
+</html>

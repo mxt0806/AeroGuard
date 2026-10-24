@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AeroGuard · 航班异常应对智能助手（模拟）</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter','Segoe UI','Microsoft YaHei',sans-serif;background:#f6f7f9;color:#1a1d24;font-size:14px;line-height:1.55}
+header{display:flex;justify-content:space-between;align-items:center;padding:16px 28px;background:#fff;border-bottom:1px solid #e8eaee;position:sticky;top:0;z-index:50;flex-wrap:wrap;gap:12px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#2563eb,#1e40af);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+h1{font-size:18px;font-weight:700}
+.sub{font-size:12px;color:#6b7280}
+.hdr-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+select,input[type=text],#fbReason{padding:8px 12px;border:1px solid #dfe3ea;border-radius:10px;font-size:13px;background:#fff;font-family:inherit}
+.ghost{padding:8px 14px;border:1px solid #dfe3ea;border-radius:10px;background:#fff;cursor:pointer;font-size:13px;transition:all .15s}
+.ghost:hover{border-color:#2563eb;color:#2563eb}
+.pill{background:#eef2ff;color:#1e40af;border-radius:99px;padding:1px 8px;font-size:12px}
+main{max-width:1240px;margin:24px auto;padding:0 20px;display:flex;flex-direction:column;gap:18px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.row.three-col{grid-template-columns:1fr 1fr 1fr}
+.row:has(.wide){grid-template-columns:1fr}
+.card{background:#fff;border-radius:16px;padding:20px 22px;box-shadow:0 1px 3px rgba(16,24,40,.06),0 4px 14px rgba(16,24,40,.04)}
+.card h2{font-size:15px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card h3{font-size:13px;font-weight:600;margin:14px 0 8px;color:#374151}
+.tag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;letter-spacing:.3px}
+.tag-fact{background:#ecfdf5;color:#047857}
+.tag-rule{background:#eef2ff;color:#1e40af}
+.tag-unk{background:#fff7ed;color:#c2410c}
+.sim-badge{background:#fef3c7;color:#92400e;font-size:10px;padding:2px 8px;border-radius:99px;font-weight:600}
+.dot{display:inline-block;width:9px;height:9px;border-radius:99px}
+.dot-f{background:#10b981}.dot-a{background:#f59e0b}.dot-u{background:#f97316}
+ul.clean{list-style:none}
+ul.clean li{padding:7px 10px;border-radius:8px;margin-bottom:6px;background:#f8fafc;font-size:13px}
+ul.clean li b{font-size:11px;color:#6b7280;display:block}
+.src{font-size:10px;color:#9ca3af;margin-left:6px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:11px;color:#6b7280;font-weight:600;padding:8px 10px;border-bottom:1px solid #eef0f3}
+td{padding:9px 10px;border-bottom:1px solid #f3f4f6}
+.hit{color:#dc2626;font-weight:700}
+.miss{color:#059669}
+.bar-wrap{background:#eef0f3;border-radius:99px;height:10px;overflow:hidden;margin:8px 0}
+.bar{height:100%;border-radius:99px;transition:width .4s}
+.risk-num{font-size:34px;font-weight:800}
+.risk-label{font-size:13px;font-weight:700;padding:3px 12px;border-radius:99px}
+.r-low{background:#ecfdf5;color:#047857}.r-med{background:#fffbeb;color:#b45309}.r-high{background:#fef2f2;color:#b91c1c}.r-na{background:#f3f4f6;color:#4b5563}
+.act-item{display:flex;gap:12px;padding:10px 12px;border:1px solid #eef0f3;border-radius:12px;margin-bottom:8px}
+.act-rank{width:24px;height:24px;border-radius:8px;background:#2563eb;color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.act-item small{display:block;color:#6b7280;font-size:11px}
+.human-pt{display:inline-block;background:#fef2f2;color:#b91c1c;font-size:12px;padding:5px 12px;border-radius:99px;margin:0 6px 6px 0;font-weight:600}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tab{padding:7px 16px;border-radius:99px;border:1px solid #dfe3ea;background:#fff;cursor:pointer;font-size:13px}
+.tab.active{background:#1e40af;color:#fff;border-color:#1e40af}
+.msg-box{background:#f8fafc;border-radius:12px;padding:16px 18px;font-size:13.5px;white-space:pre-wrap;border-left:3px solid #2563eb}
+.draft-mark{color:#b45309;font-weight:700;font-size:11px;background:#fffbeb;padding:2px 10px;border-radius:99px;display:inline-block;margin-bottom:8px}
+.feedback-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.fb{padding:8px 20px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-size:13px}
+.fb.accept{background:#ecfdf5;color:#047857}.fb.modify{background:#fffbeb;color:#b45309}.fb.reject{background:#fef2f2;color:#b91c1c}
+.fb:hover{filter:brightness(.95)}
+#fbReason{flex:1;min-width:220px}
+pre{background:#0f172a;color:#a5f3fc;font-size:11.5px;padding:14px;border-radius:12px;overflow-x:auto;white-space:pre-wrap;line-height:1.5}
+.modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:100;align-items:center;justify-content:center}
+.modal.open{display:flex}
+.modal-body{background:#fff;border-radius:18px;padding:26px;max-width:640px;width:92%;max-height:82vh;overflow-y:auto}
+.modal-body label{display:block;font-size:13px;font-weight:600;margin:14px 0 6px}
+.modal-body input[type=range]{width:100%}
+.muted{color:#6b7280;font-size:12.5px}
+.anom{border:1px solid #eef0f3;border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:13px}
+.anom small{color:#6b7280;display:block;margin-top:4px}
+.kv{display:grid;grid-template-columns:92px 1fr;gap:4px 10px;font-size:13px}
+.kv b{color:#6b7280;font-weight:600}
+footer{text-align:center;color:#9ca3af;font-size:12px;padding:26px 20px 34px}
+@media(max-width:900px){.row,.row.three-col{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">AG</div>
+    <div>
+      <h1>AeroGuard</h1>
+      <p class="sub">重点机场航班异常应对智能助手 · <span class="sim-badge">模拟数据</span></p>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <select id="eventSelect"></select>
+    <button id="whatifBtn" class="ghost">What-if 情景</button>
+    <a class="ghost" href="tests.html" style="text-decoration:none;color:inherit">测试报告</a>
+    <button id="anomalyBtn" class="ghost">异常数据库 <span id="anomCount" class="pill">0</span></button>
+  </div>
+</header>
+
+<main>
+  <section class="row top-row">
+    <div class="card" id="eventCard">
+      <h2>事件概况 <span class="tag tag-fact">事实层</span></h2>
+      <div id="eventInfo"></div>
+    </div>
+    <div class="card" id="riskCard">
+      <h2>量化风险评分 <span class="tag tag-rule">定义引擎</span></h2>
+      <div id="riskScore"></div>
+    </div>
+  </section>
+
+  <section class="row">
+    <div class="card">
+      <h2>指标 vs 阈值 <span class="tag tag-rule">可追溯</span></h2>
+      <div id="indicatorTable"></div>
+    </div>
+  </section>
+
+  <section class="row three-col">
+    <div class="card"><h2><span class="dot dot-f"></span>已知事实 Facts</h2><ul id="factsList" class="clean"></ul></div>
+    <div class="card"><h2><span class="dot dot-a"></span>推测 Assumptions</h2><ul id="assumeList" class="clean"></ul></div>
+    <div class="card"><h2><span class="dot dot-u"></span>未知 Unknowns</h2><ul id="unknownList" class="clean"></ul></div>
+  </section>
+
+  <section class="row">
+    <div class="card" id="actionCard">
+      <h2>行动建议（按优先级排序） <span class="tag tag-rule">模块化行动库</span></h2>
+      <div id="actionList"></div>
+      <h3>量化升级触发条件</h3>
+      <ul id="escalationList" class="clean"></ul>
+      <h3>强制人工决策点</h3>
+      <div id="humanPoints"></div>
+    </div>
+    <div class="card" id="askCard">
+      <h2>向人工确认信息 <span class="tag tag-unk">Ask-Human</span></h2>
+      <div id="askHuman"></div>
+      <h2 style="margin-top:18px">判断逻辑输出</h2>
+      <pre id="logicTrace"></pre>
+    </div>
+  </section>
+
+  <section class="row">
+    <div class="card wide">
+      <h2>三类受众沟通稿 <span class="tag tag-rule">RULE005 · 草案需人工审核</span></h2>
+      <div class="tabs">
+        <button class="tab active" data-aud="ops">内部运行人员</button>
+        <button class="tab" data-aud="airport">机场协作方</button>
+        <button class="tab" data-aud="pax">旅客版（仅事实）</button>
+      </div>
+      <div id="audienceMsg" class="msg-box"></div>
+    </div>
+  </section>
+
+  <section class="row">
+    <div class="card wide">
+      <h2>人工反馈 <span class="tag tag-rule">RULE006 · 记录并学习</span></h2>
+      <div class="feedback-bar">
+        <button class="fb accept" data-fb="接受">接受</button>
+        <button class="fb modify" data-fb="修改">修改</button>
+        <button class="fb reject" data-fb="拒绝">拒绝</button>
+        <input id="fbReason" placeholder="修改/拒绝原因（可选，将写入异常数据库）">
+      </div>
+      <div id="fbLog"></div>
+    </div>
+  </section>
+</main>
+
+<div class="modal" id="whatifModal">
+  <div class="modal-body">
+    <h2>What-if 情景测试</h2>
+    <p class="muted">调整假设条件，推理层实时重新评分。</p>
+    <label>机场保障能力变化 <span id="capVal">0%</span></label>
+    <input type="range" id="capSlider" min="-50" max="20" value="0">
+    <label>天气发展</label>
+    <select id="wxSelect">
+      <option value="as_forecast">按预报发展</option>
+      <option value="clears">天气转好</option>
+      <option value="worse">天气恶化</option>
+    </select>
+    <div id="whatifResult"></div>
+    <button class="ghost" onclick="closeModal('whatifModal')">关闭</button>
+  </div>
+</div>
+
+<div class="modal" id="anomalyModal">
+  <div class="modal-body">
+    <h2>异常数据库 <span class="sim-badge">可调出 / 学习</span></h2>
+    <div id="anomalyList"></div>
+    <button class="ghost" onclick="closeModal('anomalyModal')">关闭</button>
+  </div>
+</div>
+
+<footer>AeroGuard 原型 · 所有机场、事件、数值均为赛事模拟数据，不对应真实机构 · AI 仅提供决策支持，重大运行决定由专业人员作出</footer>
+
+<script src="data.js"></script>
+<script>
+/* ===== AeroGuard v3: quantified disruption engine ===== */
+const THRESH = { ownGap: -5, peerGap: -3, wind: 17, badDays: 4, persist: 2 };
+const W = { ownGap: 30, peerGap: 15, weather: 20, persist: 15, importance: 10, note: 10 };
+let state = { evt: null, whatif: { cap: 0, wx: 'as_forecast' } };
+
+const $ = id => document.getElementById(id);
+const pct = v => (v * 100).toFixed(1) + '%';
+function airportBaseline(ap) { return DATA.baseline.filter(b => b.airport === ap); }
+function latestBaseline(ap) {
+  const rows = airportBaseline(ap);
+  return rows[rows.length - 1];
+}
+function anomalyBaseline(ap) { // worst drop vs own avg12 (designed anomaly finder)
+  const rows = airportBaseline(ap);
+  return rows.reduce((a, b) => (b.gap < a.gap ? b : a), rows[0]);
+}
+function scaleOf(ap) { return DATA.scale.find(s => s.airport === ap && s.y === 2025) || DATA.scale.find(s => s.airport === ap); }
+function weatherOf(ap) { return DATA.weather.filter(w => w.airport === ap); }
+
+function scoreEvent(evt, wf) {
+  wf = wf || { cap: 0, wx: 'as_forecast' };
+  const ap = evt.airport;
+  const latest = latestBaseline(ap), anom = anomalyBaseline(ap);
+  const wxRows = weatherOf(ap);
+  const wxRecent = wxRows[wxRows.length - 1];
+  const wxMissing = wxRows.some(w => w.missing);
+  const scale = scaleOf(ap);
+  const ind = [];
+
+  const ownGap = anom.gap; // percentage points (already *100)
+  ind.push({ key: 'ownGap', name: '与自身12个月平均差（最劣月）', value: ownGap.toFixed(1) + ' pp', thr: '< ' + THRESH.ownGap + ' pp (RULE003)', hit: ownGap < THRESH.ownGap, w: W.ownGap, src: 'SIM-BASE', note: `${anom.y}年${anom.m}月: ${pct(anom.plan)} vs 均值 ${pct(anom.avg12)}` });
+
+  const peerGap = (latest.plan - latest.peer) * 100;
+  ind.push({ key: 'peerGap', name: '与同类机场平均差（最新月）', value: peerGap.toFixed(1) + ' pp', thr: '< ' + THRESH.peerGap + ' pp', hit: peerGap < THRESH.peerGap, w: W.peerGap, src: 'SIM-BASE', note: `${latest.y}年${latest.m}月: ${pct(latest.plan)} vs 同类 ${pct(latest.peer)}` });
+
+  let wxHit = false, wxNote = '';
+  const txt = (evt.weather || '') + (evt.ops || '');
+  if (wf.wx === 'clears') { wxHit = false; wxNote = 'What-if: 天气转好'; }
+  else if (wf.wx === 'worse') { wxHit = true; wxNote = 'What-if: 天气恶化'; }
+  else {
+    wxHit = /雨|雷|风|低温|雪|雾/.test(txt) || (wxRecent && (wxRecent.wind >= THRESH.wind || wxRecent.bad_days >= THRESH.badDays));
+    wxNote = wxRecent ? `近期天气: 风 ${wxRecent.wind}m/s, 不利天气 ${wxRecent.bad_days} 天${wxRecent.missing ? '（缺数据）' : ''}` : '无天气数据';
+  }
+  ind.push({ key: 'weather', name: '天气风险信号', value: wxHit ? '触发' : '未触发', thr: `风≥${THRESH.wind}m/s 或 不利天数≥${THRESH.badDays} 或事件描述`, hit: wxHit, w: W.weather, src: 'SIM-WEATHER+事件', note: wxNote });
+
+  const persistHit = /持续|仍有|频繁|下降/.test(evt.ops || '');
+  ind.push({ key: 'persist', name: '运行压力持续性', value: persistHit ? '持续' : '单次', thr: '连续≥2时段下降', hit: persistHit, w: W.persist, src: '事件描述', note: evt.ops });
+
+  const impHit = evt.importance === '高';
+  ind.push({ key: 'importance', name: '业务重要程度（影响权重）', value: evt.importance, thr: '高 = 加权', hit: impHit, w: W.importance, src: 'SIM-SCALE', note: `${scale.cat} · 吞吐 ${scale.pax} 万人次` });
+
+  let capHit = wf.cap <= -20;
+  if (wf.cap !== 0) ind.push({ key: 'capacity', name: 'What-if 保障能力变化', value: wf.cap + '%', thr: '≤ -20% = 触发', hit: capHit, w: W.note, src: 'What-if', note: '人工假设输入' });
+
+  let score = ind.reduce((s, i) => s + (i.hit ? i.w : 0), 0);
+  let conf = 100;
+  if (wxMissing) conf -= 25;
+  if (/冲突|不一致/.test((evt.known || '') + (evt.note || '') + (evt.name || ''))) conf -= 55;
+  conf = Math.max(10, conf);
+
+  let level, cls;
+  if (conf < 50) { level = '无法判断'; cls = 'r-na'; }
+  else if (score >= 65) { level = '高'; cls = 'r-high'; }
+  else if (score >= 25) { level = '中'; cls = 'r-med'; }
+  else { level = '低'; cls = 'r-low'; }
+  const fluct = score < 25 && conf >= 50; // 小波动过滤
+  return { ind, score, conf, level, cls, fluct, latest, anom, wxMissing };
+}
+/* ===== renderers ===== */
+function render() {
+  const evt = state.evt, r = scoreEvent(evt, state.whatif);
+  // event card
+  $('eventInfo').innerHTML = `<div class="kv">
+    <b>事件</b><span>${evt.id} · ${evt.name}</span>
+    <b>机场</b><span>${evt.airport}（${scaleOf(evt.airport).cat}，业务重要度 ${evt.importance}）</span>
+    <b>时间</b><span>${evt.time}</span>
+    <b>天气</b><span>${evt.weather}</span>
+    <b>运行</b><span>${evt.ops}</span>
+    <b>现场备注</b><span>${evt.note} <i class="src">未验证</i></span></div>`;
+  // risk card
+  const col = r.score >= 65 ? '#dc2626' : r.score >= 25 ? '#d97706' : '#059669';
+  $('riskScore').innerHTML = `
+    <div style="display:flex;align-items:baseline;gap:14px">
+      <span class="risk-num" style="color:${col}">${r.conf < 50 ? '—' : r.score}</span>
+      <span class="risk-label ${r.cls}">风险：${r.level}</span>
+      <span class="risk-label r-na">置信度 ${r.conf}%</span></div>
+    <div class="bar-wrap"><div class="bar" style="width:${r.score}%;background:${col}"></div></div>
+    ${r.fluct ? '<p class="muted">判定为小波动：得分低于阈值且无叠加信号，记录但不告警（小波动过滤器）。</p>' : ''}
+    ${r.conf < 50 ? '<p class="muted">数据冲突/可靠性不足：停止确定结论，转人工核验（RULE001/RULE012）。</p>' : ''}
+    <p class="muted">最劣基线：${r.anom.y}年${r.anom.m}月 完成率 ${pct(r.anom.plan)}（差 ${r.anom.gap.toFixed(1)} pp）· 最新月 ${pct(r.latest.plan)}</p>`;
+  // indicator table
+  $('indicatorTable').innerHTML = `<table><tr><th>指标</th><th>当前值</th><th>阈值</th><th>是否触发</th><th>权重</th><th>来源</th></tr>` +
+    r.ind.map(i => `<tr><td>${i.name}<br><small class="muted">${i.note || ''}</small></td><td>${i.value}</td><td>${i.thr}</td>
+      <td class="${i.hit ? 'hit' : 'miss'}">${i.hit ? '触发 +' + i.w : '未触发'}</td><td>${i.w}</td><td class="src">${i.src}</td></tr>`).join('') + '</table>';
+  // facts / assumptions / unknowns
+  const wxMissNote = r.wxMissing ? '<li>部分天气记录缺失 → 置信度下调 <span class="src">SIM-WEATHER / DQ002</span></li>' : '';
+  $('factsList').innerHTML = `
+    <li>${evt.known}<span class="src">SIM-EVENT</span></li>
+    <li>基线：${r.anom.y}年${r.anom.m}月完成率 ${pct(r.anom.plan)}，较自身均值差 ${r.anom.gap.toFixed(1)} pp<span class="src">SIM-BASE</span></li>
+    <li>规模：${scaleOf(evt.airport).pax} 万人次 · ${scaleOf(evt.airport).movements} 架次<span class="src">SIM-SCALE</span></li>${wxMissNote}`;
+  $('assumeList').innerHTML = `
+    <li>天气/压力可能影响地面保障效率（关联，非因果）<span class="src">RULE:因果边界</span></li>
+    <li>后续航班可能受前序运行影响<span class="src">假设</span></li>`;
+  $('unknownList').innerHTML = (evt.unknown || '').split('、').map(u => `<li>${u}<span class="src">待人工核查</span></li>`).join('');
+  renderActions(r); renderAsk(r); renderTrace(r); renderMsg();
+}
+/* ===== modular action library (composable) ===== */
+const ACTIONS = {
+  verify_capacity:   { t: '核查机场最新保障能力与天气更新时间', w: 100, why: 'RULE002 · 首要核查项' },
+  verify_sources:    { t: '核对冲突来源的更新时间与统计口径，不自行选取数字', w: 98, why: 'RULE001 · 来源冲突' },
+  check_rotation:    { t: '核查前序飞机位置与机组状态', w: 90, why: 'RULE004 · 前序运行' },
+  check_gates:       { t: '核查登机口与地面保障资源承压情况', w: 85, why: 'RULE004 · 资源核查' },
+  monitor_list:      { t: '建立重点时段内部监测清单', w: 70, why: 'RULE002 · 监测准备' },
+  draft_notice:      { t: '准备旅客提示草案（标注“草案”，不得自动发送）', w: 60, why: 'RULE005 · 沟通准备' },
+  escalate_ops:      { t: '建议升级至运营负责人（需人工审批）', w: 40, why: 'RULE008 · 高风险升级' },
+  record_feedback:   { t: '记录人工否决原因，调整建议并保留原记录', w: 95, why: 'RULE006 · 人工否决' }
+};
+function renderActions(r) {
+  const evt = state.evt;
+  let mods = [];
+  const name = evt.name;
+  if (/冲突/.test(name + evt.note)) mods = ['verify_sources', 'monitor_list', 'draft_notice'];
+  else if (/否决/.test(name)) mods = ['record_feedback', 'verify_capacity', 'monitor_list'];
+  else if (/旅客|沟通/.test(name)) mods = ['draft_notice', 'verify_capacity', 'monitor_list'];
+  else if (/压力|持续/.test(name + evt.ops)) mods = ['verify_capacity', 'check_gates', 'check_rotation', 'monitor_list'];
+  else mods = ['verify_capacity', 'check_rotation', 'monitor_list', 'draft_notice'];
+  if (r.score >= 65 && r.conf >= 50) mods.push('escalate_ops');
+  mods = mods.map(k => ({ k, ...ACTIONS[k] })).sort((a, b) => b.w - a.w);
+  $('actionList').innerHTML = mods.map((m, i) =>
+    `<div class="act-item"><div class="act-rank">${i + 1}</div><div>${m.t}<small>${m.why} · 模块 ${m.k}</small></div></div>`).join('');
+  $('escalationList').innerHTML = `
+    <li>综合得分升至 ≥65 且置信度 ≥50% → 建议升级运营负责人</li>
+    <li>机场确认保障能力下降 ≥20% → 立即升级</li>
+    <li>下一时段指标再降 ≥3 pp → 标记重点复核（RULE003）</li>
+    <li>出现安全相关问题或来源可靠性无法判断 → 停止结论（RULE012）</li>`;
+  $('humanPoints').innerHTML = ['航班取消', '放行至起飞', '调度变更', '维修决定', '赔付方案', '正式旅客通知发布']
+    .map(p => `<span class="human-pt">${p}</span>`).join('');
+}
+function renderAsk(r) {
+  const evt = state.evt;
+  const qs = (evt.unknown || '').split('、').map(u => `请确认：${u}`);
+  if (r.wxMissing) qs.push('请确认：缺失天气记录是否有替代来源？');
+  $('askHuman').innerHTML = qs.map(q => `<div class="act-item"><div>❓<div></div></div><div>${q}</div></div>`).join('');
+}
+function renderTrace(r) {
+  const lines = [`事件 ${state.evt.id} @ ${state.evt.airport}`, '— 评分链 —'];
+  r.ind.forEach(i => lines.push(`${i.hit ? '[HIT ]' : '[miss]'} ${i.key}: ${i.value} | 阈值 ${i.thr} | 权重 ${i.hit ? '+' + i.w : '0'} | ${i.src}`));
+  lines.push(`总分 = ${r.score}  置信度 = ${r.conf}%${r.wxMissing ? '（天气缺失 -25）' : ''}`);
+  lines.push(`风险等级 = ${r.level}${r.fluct ? '（小波动过滤：记录不告警）' : ''}`);
+  lines.push('— 通用优先级公理 —', '安全 > 资源 > 旅客影响；长期影响 > 瞬时影响');
+  $('logicTrace').textContent = lines.join('\n');
+}
+/* ===== three audience versions ===== */
+let curAud = 'ops';
+function renderMsg() {
+  const evt = state.evt, r = scoreEvent(evt, state.whatif);
+  const draft = '<span class="draft-mark">草案 · 待人工审核（RULE005）</span><br>';
+  let msg = '';
+  if (curAud === 'ops') {
+    msg = draft + `【内部运行提示 · 模拟】${evt.airport}：${evt.name}（${evt.time}）。
+风险评分 ${r.conf < 50 ? '无法判断' : r.score + ' 分 / ' + r.level}，置信度 ${r.conf}%。
+基线对比：最劣月 ${r.anom.y}年${r.anom.m}月完成率 ${pct(r.anom.plan)}（差 ${r.anom.gap.toFixed(1)} pp，RULE003 阈值 -5pp）；最新月 ${pct(r.latest.plan)}。
+已知：${evt.known}。假设：天气与运行为关联线索，不构成因果。
+信息缺口：${evt.unknown}。
+请按行动清单顺序核查，重大决定（取消/放行/调度/赔付/正式发布）必须由专业人员作出。`;
+  } else if (curAud === 'airport') {
+    msg = draft + `【机场协调信息 · 模拟】请 ${evt.airport} 协同团队确认以下事项：
+1. ${evt.time} 前后的天气更新与预报发布时间；
+2. 当前地面保障能力与是否存在资源缺口；
+3. 需要重点协调的时间段与航班批次。
+背景：我方监测到${evt.name}相关风险信号（模拟评估，非正式结论）。`;
+  } else {
+    msg = draft + `【旅客信息草案 · 模拟】
+${evt.airport} 近期可能受${/雨|雷|风|低温/.test(evt.weather) ? '天气' : '运行'}情况影响。
+当前航班状态请以航空公司正式通知为准，建议出行前查询最新动态。
+（本草案仅含已确认事实，不含推测；未经人工审核不得发布。）`;
+  }
+  $('audienceMsg').innerHTML = msg;
+}
+/* ===== anomaly database (localStorage) ===== */
+function anomDB() { try { return JSON.parse(localStorage.getItem('ag_anom') || '[]'); } catch (e) { return []; } }
+function saveAnom(list) { localStorage.setItem('ag_anom', JSON.stringify(list)); $('anomCount').textContent = list.length; }
+function logAnomaly(type, detail) {
+  const list = anomDB();
+  list.unshift({ type, evt: state.evt ? state.evt.id : '-', detail, time: new Date().toLocaleString() });
+  saveAnom(list);
+}
+function renderAnomaly() {
+  const list = anomDB();
+  $('anomCount').textContent = list.length;
+  $('anomalyList').innerHTML = list.length ? list.map(a =>
+    `<div class="anom"><b>${a.type}</b> · ${a.evt} · ${a.time}<small>${a.detail}</small></div>`).join('')
+    : '<p class="muted">暂无记录。人工反馈、数据冲突与信息缺口会自动写入这里，供复盘与学习。</p>';
+}
+/* ===== events & init ===== */
+function closeModal(id) { $(id).classList.remove('open'); }
+function init() {
+  const sel = $('eventSelect');
+  sel.innerHTML = DATA.events.map(e => `<option value="${e.id}">${e.id} · ${e.name} @ ${e.airport}</option>`).join('');
+  sel.onchange = () => { state.evt = DATA.events.find(e => e.id === sel.value); state.whatif = { cap: 0, wx: 'as_forecast' }; render(); };
+  state.evt = DATA.events[0];
+  document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active'); curAud = t.dataset.aud; renderMsg();
+  });
+  document.querySelectorAll('.fb').forEach(b => b.onclick = () => {
+    const reason = $('fbReason').value.trim();
+    logAnomaly('人工反馈·' + b.dataset.fb, `事件 ${state.evt.id} 的建议被${b.dataset.fb}${reason ? '：' + reason : ''}。原推理已保留（见判断逻辑输出），后续评估将参考此记录。`);
+    $('fbLog').innerHTML = `<p class="muted">已记录「${b.dataset.fb}」至异常数据库 ✓ 原建议与推理链已保留，不会覆盖（RULE006）。</p>`;
+    $('fbReason').value = ''; renderAnomaly();
+  });
+  $('whatifBtn').onclick = () => { $('whatifModal').classList.add('open'); runWhatif(); };
+  $('anomalyBtn').onclick = () => { renderAnomaly(); $('anomalyModal').classList.add('open'); };
+  $('capSlider').oninput = () => { $('capVal').textContent = $('capSlider').value + '%'; runWhatif(); };
+  $('wxSelect').onchange = runWhatif;
+  render();
+}
+function runWhatif() {
+  state.whatif = { cap: parseInt($('capSlider').value), wx: $('wxSelect').value };
+  const r = scoreEvent(state.evt, state.whatif);
+  $('whatifResult').innerHTML = `<p style="margin:14px 0 6px"><b>重新评分：</b>
+    <span class="risk-num" style="font-size:26px">${r.conf < 50 ? '—' : r.score}</span>
+    <span class="risk-label ${r.cls}">${r.level}</span> <span class="muted">置信度 ${r.conf}%（原评分见主界面，已同步更新）</span></p>`;
+  render();
+}
+init();
+</script>
+</body>
+</html>
